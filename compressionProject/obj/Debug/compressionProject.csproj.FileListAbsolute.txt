@@ -1,0 +1,10 @@
+C:\school\compressionProject\compressionProject\compressionProject\bin\Debug\compressionProject.exe.config
+C:\school\compressionProject\compressionProject\bin\Debug\compressionProject.exe.config
+C:\school\compressionProject\compressionProject\bin\Debug\compressionProject.exe
+C:\school\compressionProject\compressionProject\bin\Debug\compressionProject.pdb
+C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.csprojResolveAssemblyReference.cache
+C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.Properties.Resources.resources
+C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.csproj.GenerateResource.Cache
+C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.exe
+C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.pdb
+C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.Form1.resources
