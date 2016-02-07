@@ -50,6 +50,7 @@ namespace compressionProject
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 uncompressedBitmap = new Bitmap(openFileDialog1.FileName);
+                uncompressedBitmap.Save("outputImage.bmp", ImageFormat.Bmp);
             }
 
             pictureBox1.Image = uncompressedBitmap;
@@ -141,7 +142,7 @@ namespace compressionProject
                 }
             }
             File.WriteAllBytes("TestFile.cmpr", bytesToSave);
-            testBitmap.Save("outputImage.bmp", ImageFormat.Bmp);
+            
 
             System.Windows.Forms.MessageBox.Show("Compression complete!");
             //      pictureBox2.Image = testBitmap;
