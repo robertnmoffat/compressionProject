@@ -50,7 +50,7 @@ namespace compressionProject
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 uncompressedBitmap = new Bitmap(openFileDialog1.FileName);
-                uncompressedBitmap.Save("outputImage.bmp", ImageFormat.Bmp);
+                uncompressedBitmap.Save("OriginalImage.bmp", ImageFormat.Bmp);
             }
 
             pictureBox1.Image = uncompressedBitmap;
@@ -103,6 +103,8 @@ namespace compressionProject
             ycbcrPixels = subsampleYCbCr(ycbcrPixels);
 
             testBitmap = generateRgbBitmap(ycbcrPixels);
+            
+            testBitmap.Save("SubsampledImage.bmp", ImageFormat.Bmp);
 
             byte[] bytesToSave = new byte[width * height * 3+8];
 
@@ -230,7 +232,35 @@ namespace compressionProject
                 }
             }
 
+            setYImage(ycbcrPixels, uncompressed.Width, uncompressed.Height);
+
             return ycbcrPixels;
+        }
+
+        private void setYImage(YCbCr[,] pixels, int width, int height) {
+            Bitmap Y,Cb,Cr;
+            Y = new Bitmap(width, height);
+            Cb = new Bitmap(width, height);
+            Cr = new Bitmap(width, height);
+
+            Color color = new Color();
+
+            for (int y=0; y< height; y++) {
+                for (int x=0; x< width; x++) {
+                    color = Color.FromArgb((int)pixels[x, y].getY(), (int)pixels[x, y].getY(), (int)pixels[x, y].getY());  
+                    Y.SetPixel(x,y,color);
+                    color = Color.FromArgb((int)pixels[x,y].getCb(), (int)pixels[x, y].getCb(), (int)pixels[x, y].getCb());
+                    Cb.SetPixel(x,y,color);
+                    color = Color.FromArgb((int)pixels[x,y].getCr(), (int)pixels[x, y].getCr(), (int)pixels[x, y].getCr());
+                    Cr.SetPixel(x,y,color);
+                }
+            }
+            pictureBox3.Image = Y;
+            pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox4.Image = Cb;
+            pictureBox4.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox5.Image = Cr;
+            pictureBox5.SizeMode = PictureBoxSizeMode.Zoom;
         }
 
         /*convert YCbCr values to a RGB bitmap*/
@@ -276,5 +306,6 @@ namespace compressionProject
         {
 
         }
+
     }
 }
