@@ -257,6 +257,7 @@ namespace compressionProject
             }
             pictureBox3.Image = Y;
             pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
+            Cb.Save("CbImage.bmp", ImageFormat.Bmp);
             pictureBox4.Image = Cb;
             pictureBox4.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox5.Image = Cr;
