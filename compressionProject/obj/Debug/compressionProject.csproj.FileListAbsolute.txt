@@ -8,3 +8,12 @@ C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.csp
 C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.exe
 C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.pdb
 C:\school\compressionProject\compressionProject\obj\Debug\compressionProject.Form1.resources
+F:\school\Digital Multimedia\compressionProject\compressionProject\bin\Debug\compressionProject.exe.config
+F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.exe
+F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.pdb
+F:\school\Digital Multimedia\compressionProject\compressionProject\bin\Debug\compressionProject.exe
+F:\school\Digital Multimedia\compressionProject\compressionProject\bin\Debug\compressionProject.pdb
+F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.csprojResolveAssemblyReference.cache
+F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.Form1.resources
+F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.Properties.Resources.resources
+F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.csproj.GenerateResource.Cache

@@ -96,11 +96,19 @@ namespace compressionProject
             int width = uncompressed.Width;
             int height = uncompressed.Height;
 
+            double[,] Y = new double[width,height];
+            double[,] Cb = new double[width/4,height/4];
+            double[,] Cr = new double[width / 4, height / 4];
+
+           // Y = generateY(uncompressed);
+
             YCbCr[,] ycbcrPixels = new YCbCr[width, height];
             ycbcrPixels = generateYcbcrBitmap(uncompressed);
             Bitmap testBitmap = new Bitmap(width, height);
 
             ycbcrPixels = subsampleYCbCr(ycbcrPixels);
+            
+            setYImage(ycbcrPixels, ycbcrPixels.GetLength(0), ycbcrPixels.GetLength(1));
 
             testBitmap = generateRgbBitmap(ycbcrPixels);
             
@@ -197,22 +205,37 @@ namespace compressionProject
         /*subsample the YCbCr input, making every other column and every other row equal to the previous*/
         private YCbCr[,] subsampleYCbCr(YCbCr[,] input)
         {
-            for (int y = 0; y < input.GetLength(1); y++)
+            int height = input.GetLength(1);
+            int width = input.GetLength(0);
+            YCbCr[,] outputYCbCr = new YCbCr[width, height];
+            //return input;
+            for (int y = 0; y < height; y++)
             {
-                for (int x = 0; x < input.GetLength(0); x++)
+                for (int x = 0; x < width; x++)
                 {
-                    if(x%2!=0){
-                        input[x,y].setCb(input[x - 1,y].getCb());
-                        input[x, y].setCr(input[x - 1, y].getCr());
+                    outputYCbCr[x, y] = new YCbCr();
+                    outputYCbCr[x, y].setY(input[x,y].getY());
+
+                    if (y % 2 != 0)
+                    {
+                        outputYCbCr[x,y].setCb(input[x, y - 1].getCb());
+                        outputYCbCr[x,y].setCr(input[x, y - 1].getCr());
                     }
-                    if (y%2!=0) {
-                        input[x, y].setCb(input[x, y-1].getCb());
-                        input[x, y].setCr(input[x, y-1].getCr());
+                    else if (x % 2 != 0)
+                    {
+                        outputYCbCr[x, y].setCb(input[x - 1, y].getCb());
+                        outputYCbCr[x, y].setCr(input[x - 1, y].getCr());
                     }
+                    else {
+                        outputYCbCr[x, y].setCb(input[x, y].getCb());
+                        outputYCbCr[x, y].setCr(input[x, y].getCr());
+                    }                    
                 }
             }
-            return input;
+            return outputYCbCr;
         }
+
+        
 
         /*Converts a RGB bitmap to YCbCr*/
         private YCbCr[,] generateYcbcrBitmap(Bitmap uncompressed) {

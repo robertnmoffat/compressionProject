@@ -9,7 +9,7 @@ namespace compressionProject
     class YCbCr
     {
         private double Y;
-        private double Cb;
+        public double Cb;
         private double Cr;
 
         public double getY()
