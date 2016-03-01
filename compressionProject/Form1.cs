@@ -18,6 +18,10 @@ namespace compressionProject
         Bitmap uncompressedBitmap;
         Bitmap compressedBitmap;
 
+        double[,] Y;
+        double[,] Cb;
+        double[,] Cr;
+
         public Form1()
         {
             InitializeComponent();
@@ -90,35 +94,53 @@ namespace compressionProject
             compressBitmap(uncompressedBitmap);
         }
 
-        /*Compress an image bitmap using jpeg techniques*/
+
+
+        /*
+            Compress an image bitmap using jpeg techniques
+            ---------------------------Starting point of compression.-------------------------------------------------------
+        */
         public void compressBitmap(Bitmap uncompressed)
         {
             int width = uncompressed.Width;
             int height = uncompressed.Height;
 
-            double[,] Y = new double[width,height];
-            double[,] Cb = new double[width/4,height/4];
-            double[,] Cr = new double[width / 4, height / 4];
+            Y = new double[width,height];
+            Cb = new double[width/2,height/2];
+            Cr = new double[width / 2, height / 2];
+            
+            generateYcbcrBitmap(uncompressed);          
+            setYImage();//Sets the images to display on screen
 
-           // Y = generateY(uncompressed);
-
-            YCbCr[,] ycbcrPixels = new YCbCr[width, height];
-            ycbcrPixels = generateYcbcrBitmap(uncompressed);
             Bitmap testBitmap = new Bitmap(width, height);
-
-            ycbcrPixels = subsampleYCbCr(ycbcrPixels);
+            testBitmap = generateRgbBitmapFromYCbCr();
+            testBitmap.Save("SubsampledImage.bmp", ImageFormat.Bmp);
             
-            setYImage(ycbcrPixels, ycbcrPixels.GetLength(0), ycbcrPixels.GetLength(1));
 
-            testBitmap = generateRgbBitmap(ycbcrPixels);
-            
+
+            System.Windows.Forms.MessageBox.Show("Compression complete!");
+        }
+        //------------------------------------------------------------------------------------------------------------------
+
+
+        /**
+        Old code for saving to custom fileType.  not useable anymore.
+            **/
+        public void oldSavingStuff() {
+            int width = Y.GetLength(0);
+            int height = Y.GetLength(1);
+            YCbCr[,] ycbcrPixels = new YCbCr[width,height];
+
+            Bitmap testBitmap = new Bitmap(width, height);
+            //testBitmap = generateRgbBitmap(ycbcrPixels);
+
             testBitmap.Save("SubsampledImage.bmp", ImageFormat.Bmp);
 
-            byte[] bytesToSave = new byte[width * height * 3+8];
+            byte[] bytesToSave = new byte[width * height * 3 + 8];
 
             int byteOffset = 0;
             RGB rgb = new RGB();
-            
+
             byte[] widthBytes = BitConverter.GetBytes(width);
             byte[] heightBytes = BitConverter.GetBytes(height);
             if (BitConverter.IsLittleEndian)
@@ -128,7 +150,8 @@ namespace compressionProject
             }
 
             //Saving image width to beginning of byte array.
-            for (int i=0; i<widthBytes.Length; i++) {
+            for (int i = 0; i < widthBytes.Length; i++)
+            {
                 bytesToSave[byteOffset++] = widthBytes[i];
             }
 
@@ -143,7 +166,7 @@ namespace compressionProject
             {
                 for (int x = 0; x < width; x++)
                 {
-                    rgb = convertYCbCrToRgb(ycbcrPixels[x,y]);
+                    rgb = convertYCbCrToRgb(1,2,3);
                     bytesToSave[y * width + x + byteOffset++] = (byte)rgb.getRed();
                     bytesToSave[y * width + x + byteOffset++] = (byte)rgb.getGreen();
                     bytesToSave[y * width + x + byteOffset] = (byte)rgb.getBlue();
@@ -152,11 +175,6 @@ namespace compressionProject
                 }
             }
             File.WriteAllBytes("TestFile.cmpr", bytesToSave);
-            
-
-            System.Windows.Forms.MessageBox.Show("Compression complete!");
-            //      pictureBox2.Image = testBitmap;
-            //pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
         }
 
         /*Converts custom cmpr filetype to bitmap object*/
@@ -202,43 +220,9 @@ namespace compressionProject
             return compressedImage;
         }
 
-        /*subsample the YCbCr input, making every other column and every other row equal to the previous*/
-        private YCbCr[,] subsampleYCbCr(YCbCr[,] input)
-        {
-            int height = input.GetLength(1);
-            int width = input.GetLength(0);
-            YCbCr[,] outputYCbCr = new YCbCr[width, height];
-            //return input;
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    outputYCbCr[x, y] = new YCbCr();
-                    outputYCbCr[x, y].setY(input[x,y].getY());
-
-                    if (y % 2 != 0)
-                    {
-                        outputYCbCr[x,y].setCb(input[x, y - 1].getCb());
-                        outputYCbCr[x,y].setCr(input[x, y - 1].getCr());
-                    }
-                    else if (x % 2 != 0)
-                    {
-                        outputYCbCr[x, y].setCb(input[x - 1, y].getCb());
-                        outputYCbCr[x, y].setCr(input[x - 1, y].getCr());
-                    }
-                    else {
-                        outputYCbCr[x, y].setCb(input[x, y].getCb());
-                        outputYCbCr[x, y].setCr(input[x, y].getCr());
-                    }                    
-                }
-            }
-            return outputYCbCr;
-        }
-
-        
 
         /*Converts a RGB bitmap to YCbCr*/
-        private YCbCr[,] generateYcbcrBitmap(Bitmap uncompressed) {
+        private void generateYcbcrBitmap(Bitmap uncompressed) {
             YCbCr[,] ycbcrPixels = new YCbCr[uncompressed.Width, uncompressed.Height];
             Color pixel;
             RGB rgb = new RGB();
@@ -252,33 +236,45 @@ namespace compressionProject
                     rgb.setGreen(pixel.G);
                     rgb.setBlue(pixel.B);
                     ycbcrPixels[x, y] = convertRgbToYCbCr(rgb);
+                    Y[x, y] = ycbcrPixels[x, y].getY();                    
+                    Cb[x/2,y/2] = ycbcrPixels[x, y].getCb();
+                    Cr[x/2, y/2] = ycbcrPixels[x, y].getCr();
                 }
             }
-
-            setYImage(ycbcrPixels, uncompressed.Width, uncompressed.Height);
-
-            return ycbcrPixels;
         }
 
-        private void setYImage(YCbCr[,] pixels, int width, int height) {
+        private void setYImage() {
+            int width = this.Y.GetLength(0);
+            int height = this.Y.GetLength(1);
+
             Bitmap Y,Cb,Cr;
             Y = new Bitmap(width, height);
-            Cb = new Bitmap(width, height);
-            Cr = new Bitmap(width, height);
+            Cb = new Bitmap(width/2, height/2);
+            Cr = new Bitmap(width/2, height/2);
 
             Color color = new Color();
 
             for (int y=0; y< height; y++) {
                 for (int x=0; x< width; x++) {
-                    color = Color.FromArgb((int)pixels[x, y].getY(), (int)pixels[x, y].getY(), (int)pixels[x, y].getY());  
-                    Y.SetPixel(x,y,color);
-                    color = Color.FromArgb((int)pixels[x,y].getCb(), (int)pixels[x, y].getCb(), (int)pixels[x, y].getCb());
-                    Cb.SetPixel(x,y,color);
-                    color = Color.FromArgb((int)pixels[x,y].getCr(), (int)pixels[x, y].getCr(), (int)pixels[x, y].getCr());
-                    Cr.SetPixel(x,y,color);
+                    //color = Color.FromArgb((int)pixels[x, y].getY(), (int)pixels[x, y].getY(), (int)pixels[x, y].getY());
+                    color = Color.FromArgb((int)this.Y[x,y], (int)this.Y[x,y], (int)this.Y[x, y]);
+                    Y.SetPixel(x,y,color);                    
                 }
             }
-            pictureBox3.Image = Y;
+
+            for (int y = 0; y < Cb.Height; y++)
+            {
+                for (int x = 0; x < Cb.Width; x++)
+                {
+                    //color = Color.FromArgb((int)pixels[x,y].getCb(), (int)pixels[x, y].getCb(), (int)pixels[x, y].getCb());
+                    color = Color.FromArgb((int)this.Cb[x, y], (int)this.Cb[x, y], (int)this.Cb[x, y]);
+                    Cb.SetPixel(x, y, color);
+                    //color = Color.FromArgb((int)pixels[x,y].getCr(), (int)pixels[x, y].getCr(), (int)pixels[x, y].getCr());
+                    color = Color.FromArgb((int)this.Cr[x, y], (int)this.Cr[x, y], (int)this.Cr[x, y]);
+                    Cr.SetPixel(x, y, color);
+                }
+            }
+                    pictureBox3.Image = Y;
             pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
             Cb.Save("CbImage.bmp", ImageFormat.Bmp);
             pictureBox4.Image = Cb;
@@ -288,16 +284,18 @@ namespace compressionProject
         }
 
         /*convert YCbCr values to a RGB bitmap*/
-        private Bitmap generateRgbBitmap(YCbCr[,] input)
+        private Bitmap generateRgbBitmapFromYCbCr()
         {
-            Bitmap bitmap = new Bitmap(input.GetLength(0), input.GetLength(1));
+            int width = Y.GetLength(0);
+            int height = Y.GetLength(1);
+            Bitmap bitmap = new Bitmap(width, height);
             Color color;
             RGB rgb = new RGB();
-            for (int y = 0; y < input.GetLength(1); y++)
+            for (int y = 0; y < height; y++)
             {
-                for (int x = 0; x < input.GetLength(0); x++)
+                for (int x = 0; x < width; x++)
                 {
-                    rgb = convertYCbCrToRgb(input[x,y]);
+                    rgb = convertYCbCrToRgb(Y[x,y], Cb[x/2,y/2], Cr[x/2,y/2]);
                     color = Color.FromArgb(rgb.getRed(),rgb.getGreen(),rgb.getBlue());
                     bitmap.SetPixel(x, y, color);
                 }
@@ -315,13 +313,13 @@ namespace compressionProject
         }
 
         /*Converts YCbCr to RGB*/
-        private RGB convertYCbCrToRgb(YCbCr yCbCr) {
+        private RGB convertYCbCrToRgb(double curY, double curCb, double curCr) {
             RGB output = new RGB();
-            double red = (yCbCr.getY() - 16) * 1.164 + (yCbCr.getCb()-128)*0 + (yCbCr.getCr()-128)*1.596;
+            double red = (curY - 16) * 1.164 + (curCb - 128)*0 + (curCr - 128)*1.596;
             output.setRed((int)Math.Round(red));
-            double green = (yCbCr.getY() - 16) * 1.164 + (yCbCr.getCb() - 128) * -0.392 + (yCbCr.getCr() - 128) * -0.813;
+            double green = (curY - 16) * 1.164 + (curCb - 128) * -0.392 + (curCr - 128) * -0.813;
             output.setGreen((int)green);
-            double blue = (yCbCr.getY() - 16) * 1.164 + (yCbCr.getCb() - 128) * 2.017 + (yCbCr.getCr() - 128) * 0;
+            double blue = (curY - 16) * 1.164 + (curCb - 128) * 2.017 + (curCr - 128) * 0;
             output.setBlue((int)blue);
             return output;
         }
