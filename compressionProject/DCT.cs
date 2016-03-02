@@ -57,19 +57,34 @@ namespace compressionProject
         /*
         Applies DCT formula to a block, and returns the post DCT block
             */
-        public double applyDCTFormula(Block input, int xPosition, int yPosition) {
+        public double applyDCTFormula(Block input, int u, int v) {
             //--------------------------------------------------------------------------------------------------------------TODO
             double sum=0, firstCos, secondCos;
             
-            for (int y=0; y<8; y++) {
-                for (int x=0; x<8; x++) {
-                    firstCos = Math.Cos((2*y+1)*xPosition*Math.PI/16);
-                    secondCos = Math.Cos((2 * x + 1) * yPosition * Math.PI / 16);
-                    sum += firstCos * secondCos * input.get(x,y);
+            for (int i=0; i<8; i++) {
+                for (int j=0; j<8; j++) {
+                    firstCos = Math.Cos((2*i+1)*u*Math.PI/16);
+                    secondCos = Math.Cos((2 * j + 1) * v * Math.PI / 16);
+                    sum += firstCos * secondCos * input.get(j,i);
                 }
             }
 
-            sum *= c(xPosition) * c(yPosition) / 4;
+            sum *= c(u) * c(v) / 4;
+
+            return sum;
+        }
+
+        public double applyIDCTFormula(Block input, int i, int j) {
+            //---------------------------------------------------------------------------------------------------------------TODO
+            double sum = 0, firstCos, secondCos;
+
+            for (int v=0; v<8; v++) {
+                for (int u=0; u<8; u++) {
+                    firstCos = Math.Cos((2*i+1)*u*Math.PI/16);
+                    secondCos = Math.Cos((2*j+1)*v*Math.PI/16);
+                    sum += c(u) * c(v) * firstCos * secondCos*input.get(u,v);
+                }
+            }
 
             return sum;
         }
