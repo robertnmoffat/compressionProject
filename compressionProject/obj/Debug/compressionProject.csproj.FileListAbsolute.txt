@@ -17,3 +17,12 @@ F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\com
 F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.Form1.resources
 F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.Properties.Resources.resources
 F:\school\Digital Multimedia\compressionProject\compressionProject\obj\Debug\compressionProject.csproj.GenerateResource.Cache
+D:\school\digipro\compressionProject\compressionProject\bin\Debug\compressionProject.exe.config
+D:\school\digipro\compressionProject\compressionProject\obj\Debug\compressionProject.exe
+D:\school\digipro\compressionProject\compressionProject\obj\Debug\compressionProject.pdb
+D:\school\digipro\compressionProject\compressionProject\bin\Debug\compressionProject.exe
+D:\school\digipro\compressionProject\compressionProject\bin\Debug\compressionProject.pdb
+D:\school\digipro\compressionProject\compressionProject\obj\Debug\compressionProject.csprojResolveAssemblyReference.cache
+D:\school\digipro\compressionProject\compressionProject\obj\Debug\compressionProject.Form1.resources
+D:\school\digipro\compressionProject\compressionProject\obj\Debug\compressionProject.Properties.Resources.resources
+D:\school\digipro\compressionProject\compressionProject\obj\Debug\compressionProject.csproj.GenerateResource.Cache

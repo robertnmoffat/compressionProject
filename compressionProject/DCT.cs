@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,16 @@ namespace compressionProject
             for (int y=0; y<verticalBlocks; y++) {
                 for (int x=0; x<horizontalBlocks; x++) {
                     Yblocks[x, y] = generateBlock(Y, x*8, y*8);//which block, multiplied by block offset (8)
-                    Yblocks[x, y] = applyDCTFormula(Yblocks[x,y]);
+
+
+                    //Debug.WriteLine("-----------Starting------------");
+                    for (int v=0; v<8; v++) {
+                        for (int u=0; u<8; u++) {
+                            Yblocks[x, y].set(u,v, applyDCTFormula(Yblocks[x, y], u, v));
+                            //Debug.Write(""+Yblocks[x,y].get(u,v)+" ");
+                        }
+                        //Debug.WriteLine("");
+                    }       
                 }
             }            
         }
@@ -29,12 +39,12 @@ namespace compressionProject
             */
         Block generateBlock(double[,] fullSize, int xPosition, int yPosition) {
             Block block = new Block();
-
+            
             for (int y=yPosition; y<yPosition+8; y++) {
                 for (int x=xPosition; x<xPosition+8; x++) {
                     if (x < fullSize.GetLength(0) && y < fullSize.GetLength(1))
                     {
-                        block.set(x,y,fullSize[x,y]);
+                        block.set(x-xPosition,y-yPosition,fullSize[x,y]);
                     }
                     else {
                         block.set(x,y,0.0);
@@ -47,11 +57,10 @@ namespace compressionProject
         /*
         Applies DCT formula to a block, and returns the post DCT block
             */
-        public Block applyDCTFormula(Block input) {
+        public double applyDCTFormula(Block input, int xPosition, int yPosition) {
             //--------------------------------------------------------------------------------------------------------------TODO
-            double sum = c(xPosition) * c(yPosition)/4, firstCos, secondCos;
-
-
+            double sum=0, firstCos, secondCos;
+            
             for (int y=0; y<8; y++) {
                 for (int x=0; x<8; x++) {
                     firstCos = Math.Cos((2*y+1)*xPosition*Math.PI/16);
@@ -60,7 +69,9 @@ namespace compressionProject
                 }
             }
 
-            return null;
+            sum *= c(xPosition) * c(yPosition) / 4;
+
+            return sum;
         }
 
         /*
@@ -68,7 +79,7 @@ namespace compressionProject
             */
         public double c(int input) {
             if (input == 0) return 1 / Math.Sqrt(2);
-            return 0;
+            return 1;
         }
 
         public void setY(double[,] Y) {

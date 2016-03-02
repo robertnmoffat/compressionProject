@@ -115,8 +115,13 @@ namespace compressionProject
             Bitmap testBitmap = new Bitmap(width, height);
             testBitmap = generateRgbBitmapFromYCbCr();
             testBitmap.Save("SubsampledImage.bmp", ImageFormat.Bmp);
-            
 
+            DCT dct = new DCT();
+            dct.setY(Y);
+            dct.setCb(Cb);
+            dct.setCr(Cr);
+
+            dct.runDCT();
 
             System.Windows.Forms.MessageBox.Show("Compression complete!");
         }
