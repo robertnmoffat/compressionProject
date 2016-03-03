@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,13 +27,20 @@ namespace compressionProject
                     //Debug.WriteLine("-----------Starting------------");
                     for (int v=0; v<8; v++) {
                         for (int u=0; u<8; u++) {
-                            Yblocks[x, y].set(u,v, applyDCTFormula(Yblocks[x, y], u, v));
+                            //Yblocks[x, y].set(u,v, applyDCTFormula(Yblocks[x, y], u, v));
+                            //Yblocks[x, y].set(u,v, Math.Abs(applyIDCTFormula(Yblocks[x,y], u, v)));
+                            if (u == 0 && v == 0) Yblocks[x, y].set(u,v,0.0);
+                            if (Yblocks[x,y].get(u,v)>255) Yblocks[x, y].set(u, v, 255);
                             //Debug.Write(""+Yblocks[x,y].get(u,v)+" ");
                         }
                         //Debug.WriteLine("");
-                    }       
+                    }                   
+                           
                 }
-            }            
+            }
+
+            Bitmap postDCTImage = createBitmapFromBlocks(Yblocks, Y.GetLength(0), Y.GetLength(1));
+            postDCTImage.Save("PostDCT.bmp", ImageFormat.Bmp);
         }
 
         /*
@@ -82,7 +91,7 @@ namespace compressionProject
                 for (int u=0; u<8; u++) {
                     firstCos = Math.Cos((2*i+1)*u*Math.PI/16);
                     secondCos = Math.Cos((2*j+1)*v*Math.PI/16);
-                    sum += c(u) * c(v) * firstCos * secondCos*input.get(u,v);
+                    sum += c(u) * c(v) /4 * firstCos * secondCos*input.get(u,v);
                 }
             }
 
@@ -95,6 +104,27 @@ namespace compressionProject
         public double c(int input) {
             if (input == 0) return 1 / Math.Sqrt(2);
             return 1;
+        }
+
+        public Bitmap createBitmapFromBlocks(Block[,] blocks, int imageWidth, int imageHeight) {
+            //----------------------------------------------------------------------------------------------------------------TODO
+            Bitmap image = new Bitmap(imageWidth, imageHeight);
+            int blocksHorizontal = blocks.GetLength(0);
+            int blocksVertical = blocks.GetLength(1);
+
+            for (int y=0; y<blocksHorizontal; y++) {
+                for (int x=0; x<blocksVertical; x++) {
+
+                    for (int blockY=0; blockY<8; blockY++) {
+                        for (int blockX=0; blockX<8; blockX++) {
+                            image.SetPixel(x*8+blockX, y*8+blockY, Color.FromArgb((int)blocks[x,y].get(blockX,blockY), (int)blocks[x, y].get(blockX, blockY), (int)blocks[x, y].get(blockX, blockY)));
+                        }
+                    }
+
+                }
+            }
+
+            return image;
         }
 
         public void setY(double[,] Y) {
