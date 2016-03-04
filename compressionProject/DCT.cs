@@ -13,6 +13,27 @@ namespace compressionProject
     {
         double[,] Y, Cb, Cr;
 
+        readonly int[,] luminance = {
+            { 16, 11, 10, 16, 24, 40, 51, 61 },
+            { 12, 12, 14, 19, 26, 58, 60, 55 },
+            { 14, 13, 16, 24, 40, 57, 69, 56 },
+            { 14, 17, 22, 29, 51, 87, 80, 62 },
+            { 18, 22, 37, 56, 68, 109, 103, 77 },
+            { 24, 35, 55, 64, 81, 104, 113, 92 },
+            { 49, 64, 78, 87, 103, 121, 120, 101 },
+            { 72, 92, 95, 98, 112, 100, 103, 99 }};
+
+        readonly int[,] chrominance = {
+            { 17, 18, 24, 27, 47, 99, 99, 99 },
+            { 18, 21, 26, 66, 99, 99, 99, 99 },
+            { 24, 26, 56, 99, 99, 99, 99, 99 },
+            { 47, 66, 99, 99, 99, 99, 99, 99 },
+            { 99, 99, 99, 99, 99, 99, 99, 99 },
+            { 99, 99, 99, 99, 99, 99, 99, 99 },
+            { 99, 99, 99, 99, 99, 99, 99, 99 },
+            { 99, 99, 99, 99, 99, 99, 99, 99 }};
+
+
         public void runDCT() {
             int horizontalBlocks = (int)Math.Ceiling((double)Y.GetLength(0) / 8);//amount of full 8x8 blocks will fit horizontally
             int verticalBlocks = (int)Math.Ceiling((double)Y.GetLength(1) / 8);//amount of full 8x8 blocks will fit vertically
@@ -38,10 +59,11 @@ namespace compressionProject
                     {
                         for (int u = 0; u < 8; u++)
                         {
+
                             dctBlocks[x, y].set(u, v, applyDCTFormula(Yblocks[x, y], u, v));
 
                             //--------------------------------------------------------------------APPLY QUANTIZATION HERE
-
+                            
 
                             //Yblocks[x, y].set(u,v, Math.Abs(applyIDCTFormula(Yblocks[x,y], u, v)));
                             //if (u == 0 && v == 0) Yblocks[x, y].set(u,v,0.0);
@@ -50,6 +72,8 @@ namespace compressionProject
                         }
                         //Debug.WriteLine("");
                     }
+
+                    dctBlocks[x,y] = applyQuantization(dctBlocks[x,y], luminance);
                 }
             }
 
@@ -57,6 +81,8 @@ namespace compressionProject
             {
                 for (int x = 0; x < horizontalBlocks; x++)
                 {
+                    dctBlocks[x, y] = RemoveQuantization(dctBlocks[x,y], luminance);
+
                     for (int v = 0; v < 8; v++)
                     {
                         for (int u = 0; u < 8; u++)
@@ -94,7 +120,7 @@ namespace compressionProject
         }
 
         /*
-        Applies DCT formula to a block, and returns the post DCT block
+        Applies DCT formula to a block, and returns the post DCT pixel
             */
         public double applyDCTFormula(Block input, double u, double v) {
             double sum=0, firstCos, secondCos;
@@ -113,6 +139,9 @@ namespace compressionProject
             return sum;
         }
 
+        /*
+        Applies inverse DCT formula and returns the image pixel
+            */
         public double applyIDCTFormula(Block input, double i, double j) {
             double sum = 0, firstCos, secondCos;
 
@@ -135,6 +164,9 @@ namespace compressionProject
             return 1;
         }
 
+        /*
+        Creates a bitmap from an array of 8*8 blocks.
+            */
         public Bitmap createBitmapFromBlocks(Block[,] blocks, int imageWidth, int imageHeight) {
             Bitmap image = new Bitmap(imageWidth, imageHeight);
             int blocksVertical = blocks.GetLength(0);
@@ -154,6 +186,58 @@ namespace compressionProject
             }
 
             return image;
+        }
+
+        /*
+        Divides the values of the block by a passed quantization table, and returns the outcome
+            */
+        public Block applyQuantization(Block block, int[,] table) {
+            Block quantizedBlock = new Block();
+            for (int y=0; y<8; y++) {
+                for (int x=0; x<8; x++) {
+                    quantizedBlock.set(x,y,Math.Round(block.get(x, y) / table[x, y]));
+                }
+            }
+
+            return quantizedBlock;
+        }
+
+        /*
+        Multiplies the values of a quantized block by a quantization table to undo quantization. returns the outcome
+            */
+        public Block RemoveQuantization(Block block, int[,] table)
+        {
+            Block quantizedBlock = new Block();
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    quantizedBlock.set(x, y, Math.Round(block.get(x, y) * table[x, y]));
+                }
+            }
+
+            return quantizedBlock;
+        }
+
+        /*
+        converts a block into a 1 dimensional array
+            */
+        public int[] applyZigZag(Block block) {
+            bool goingUp = true;//if true, zig upwards, if false zig downwards
+            int x = 0, y = 0;
+
+            while (true) {
+                if (goingUp)
+                {
+                    if (y - 1 < 0) {
+                        goingUp = false;
+                        continue;
+                    }
+                }
+                else {
+
+                }
+            }
         }
 
         public void setY(double[,] Y) {
