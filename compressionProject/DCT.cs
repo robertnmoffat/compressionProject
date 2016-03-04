@@ -74,6 +74,12 @@ namespace compressionProject
                     }
 
                     dctBlocks[x,y] = applyQuantization(dctBlocks[x,y], luminance);
+                    int[] zig = applyZigZag(dctBlocks[x,y]);
+                    int[] encoded = runLengthEncode(zig);
+                    for (int i=0; i<encoded.GetLength(0); i++) {
+                        Debug.Write((encoded[i])+",");
+                    }
+                    Debug.WriteLine("");
                 }
             }
 
@@ -195,7 +201,7 @@ namespace compressionProject
             Block quantizedBlock = new Block();
             for (int y=0; y<8; y++) {
                 for (int x=0; x<8; x++) {
-                    quantizedBlock.set(x,y,Math.Round(block.get(x, y) / table[x, y]));
+                    quantizedBlock.set(x,y,Math.Round((double)block.get(x, y) / table[x, y]));
                 }
             }
 
@@ -212,7 +218,7 @@ namespace compressionProject
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    quantizedBlock.set(x, y, Math.Round(block.get(x, y) * table[x, y]));
+                    quantizedBlock.set(x, y, block.get(x, y) * table[x, y]);
                 }
             }
 
@@ -223,22 +229,97 @@ namespace compressionProject
         converts a block into a 1 dimensional array
             */
         public int[] applyZigZag(Block block) {
-            bool goingUp = true;//if true, zig upwards, if false zig downwards
-            int x = 0, y = 0;
+            int[] zigzag = new int[64];
+            int arrayPos =0;
+            int yMove = -1;
+            int xMove = 1;
+            int x = 0;
+            int y = 0;
+            
+            for (int level = 0; level < 8; level++)
+            {
 
-            while (true) {
-                if (goingUp)
+                for (int depth = 0; depth < level; depth++)
                 {
-                    if (y - 1 < 0) {
-                        goingUp = false;
+                    x += xMove;
+                    y += yMove;
+                    
+                    zigzag[arrayPos++] = (int)block.get(x,y);
+                }
+
+                if (level == 7) break;
+
+                if (xMove < 0) y++; else x++;
+
+                zigzag[arrayPos++] = (int)block.get(x, y);
+
+                yMove *= -1;
+                xMove *= -1;
+            }
+
+            yMove *= -1;
+            xMove *= -1;
+
+            if (xMove < 0) y++; else x++;
+
+            zigzag[arrayPos++] = (int)block.get(x, y);
+
+            for (int level = 6; level > 0; level--)
+            {
+
+                for (int depth = level; depth > 0; depth--)
+                {
+                    x += xMove;
+                    y += yMove;
+
+                    zigzag[arrayPos++] = (int)block.get(x, y);
+                }
+
+                if (xMove < 0) x++; else y++;
+
+                zigzag[arrayPos++] = (int)block.get(x, y);
+
+                yMove *= -1;
+                xMove *= -1;
+            }
+
+            return zigzag;
+        }
+
+        public int[] runLengthEncode(int[] array) {
+            int[] buffer = new int[256];
+            int pos = 0;
+            int count = 1;
+            int currentValue=array[0];
+
+            for (int i=1; i<array.GetLength(0); i++) {
+                if (array[i] != currentValue){
+                    if (count <4) {
+                        for (int j=0; j< count; j++) {
+                            buffer[pos++] = currentValue;                            
+                        }
+                        count = 1;
+                        currentValue = array[i];
                         continue;
                     }
+                    buffer[pos++] = 255;
+                    buffer[pos++] = count;
+                    buffer[pos++] = currentValue;
+                    count = 1;
+                    currentValue = array[i];
+                    continue;
                 }
-                else {
-
-                }
+                count++;
             }
-        }
+
+            int[] output = new int[pos];
+
+            for (int i=0; i< pos; i++) {
+                output[i] = buffer[i];
+            }
+
+            return output;
+        }      
 
         public void setY(double[,] Y) {
             this.Y = Y;
