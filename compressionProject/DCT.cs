@@ -74,12 +74,61 @@ namespace compressionProject
                     }
 
                     dctBlocks[x,y] = applyQuantization(dctBlocks[x,y], luminance);
-                    int[] zig = applyZigZag(dctBlocks[x,y]);
-                    int[] encoded = runLengthEncode(zig);
-                    for (int i=0; i<encoded.GetLength(0); i++) {
-                        Debug.Write((encoded[i])+",");
+
+                    if (x==0&&y==0) {
+                        for (int q=0; q<8; q++) {
+                            for (int w=0; w<8; w++) {
+                                Debug.Write(dctBlocks[x, y].get(q, w)+",");
+                            }
+                            Debug.WriteLine("");
+                        }
+
+                        Debug.WriteLine("-------------------------------------");
+                        int[] zig = applyZigZag(dctBlocks[x, y]);
+
+                        for (int i = 0; i < zig.GetLength(0); i++)
+                        {
+                            Debug.Write((zig[i])+",");
+                        }
+
+                        Debug.WriteLine("");
+                        Debug.WriteLine("-------------------------------------");
+                        int[] encoded = runLengthEncode(zig);
+
+                        for (int i = 0; i < encoded.GetLength(0); i++)
+                        {
+                            Debug.Write((encoded[i]) + ",");
+                        }
+
+                        Debug.WriteLine("");
+                        Debug.WriteLine("-------------------------------------");
+
+                        zig = undoRunlengthEncoding(encoded);
+                        for (int i = 0; i < zig.GetLength(0); i++)
+                        {
+                            Debug.Write((zig[i]) + ",");
+                        }
+
+                        dctBlocks[x, y] = undoZigZag(zig);
+                        Debug.WriteLine("");
+                        Debug.WriteLine("-------------------------------------");
+
+                        for (int q = 0; q < 8; q++)
+                        {
+                            for (int w = 0; w < 8; w++)
+                            {
+                                Debug.Write(dctBlocks[x, y].get(q, w) + ",");
+                            }
+                            Debug.WriteLine("");
+                        }
                     }
-                    Debug.WriteLine("");
+
+                   // int[] zig = applyZigZag(dctBlocks[x,y]);
+                    //int[] encoded = runLengthEncode(zig);
+//for (int i=0; i<encoded.GetLength(0); i++) {
+                     //   Debug.Write((encoded[i])+",");
+//}
+//Debug.WriteLine("");
                 }
             }
 
@@ -235,7 +284,9 @@ namespace compressionProject
             int xMove = 1;
             int x = 0;
             int y = 0;
-            
+
+            zigzag[arrayPos++] = (int)block.get(x, y);
+
             for (int level = 0; level < 8; level++)
             {
 
@@ -286,6 +337,73 @@ namespace compressionProject
             return zigzag;
         }
 
+        /*
+        undoes zig zag on an int array, and outputs the original 8x8 block
+            */
+        public Block undoZigZag(int[] array) {
+            Block block = new Block();
+
+            int arrayPos = 0;
+            int yMove = -1;
+            int xMove = 1;
+            int x = 0;
+            int y = 0;
+
+            block.set(x, y, array[arrayPos++]);
+
+            for (int level = 0; level < 8; level++)
+            {
+
+                for (int depth = 0; depth < level; depth++)
+                {
+                    x += xMove;
+                    y += yMove;
+
+                    block.set(x, y, array[arrayPos++]);
+                }
+
+                if (level == 7) break;
+
+                if (xMove < 0) y++; else x++;
+
+                block.set(x, y, array[arrayPos++]);
+
+                yMove *= -1;
+                xMove *= -1;
+            }
+
+            yMove *= -1;
+            xMove *= -1;
+
+            if (xMove < 0) y++; else x++;
+
+            block.set(x, y, array[arrayPos++]);
+
+            for (int level = 6; level > 0; level--)
+            {
+
+                for (int depth = level; depth > 0; depth--)
+                {
+                    x += xMove;
+                    y += yMove;
+
+                    block.set(x, y, array[arrayPos++]);
+                }
+
+                if (xMove < 0) x++; else y++;
+
+                block.set(x, y, array[arrayPos++]);
+
+                yMove *= -1;
+                xMove *= -1;
+            }
+
+            return block;
+        }
+
+        /*
+        Run length encodes an int array. uses 255 as the key, as none of the quantized values get that high.
+            */
         public int[] runLengthEncode(int[] array) {
             int[] buffer = new int[256];
             int pos = 0;
@@ -319,7 +437,34 @@ namespace compressionProject
             }
 
             return output;
-        }      
+        }    
+        
+        /*
+        undoes run length encoding, extending the compressed array
+            */
+        public int[] undoRunlengthEncoding(int[] array) {
+            int[] output = new int[64];
+            int pos = 0;
+            int count;
+
+            for (int i=0; i<array.GetLength(0); i++) {
+                if (array[i]==255) {
+                    i++;
+                    count = array[i++];
+                    for (int j=0; j< count; j++) {
+                        output[pos++] = array[i];
+                    }
+                    continue;
+                }
+                output[pos++] = array[i];
+            }
+
+            while (pos < 63) {
+                output[pos++] = 0;
+            }
+
+            return output;
+        }  
 
         public void setY(double[,] Y) {
             this.Y = Y;
