@@ -157,7 +157,7 @@ namespace compressionProject
         /*
         Generates an 8x8 block from a position 
             */
-        Block generateBlock(double[,] fullSize, int xPosition, int yPosition) {
+        public Block generateBlock(double[,] fullSize, int xPosition, int yPosition) {
             Block block = new Block();
             
             for (int y=yPosition; y<yPosition+8; y++) {
@@ -233,6 +233,7 @@ namespace compressionProject
                     for (int blockY=0; blockY<8; blockY++) {
                         for (int blockX=0; blockX<8; blockX++) {
                             if ( y * 8 + blockY >= imageHeight) continue;
+                            if (x * 8 + blockX >= imageWidth) continue;
                             image.SetPixel(x*8+blockX, y*8+blockY, Color.FromArgb((int)blocks[x,y].get(blockX,blockY), (int)blocks[x, y].get(blockX, blockY), (int)blocks[x, y].get(blockX, blockY)));
                         }
                     }

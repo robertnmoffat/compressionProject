@@ -44,12 +44,18 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.loadSecondFrameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pictureBox6 = new System.Windows.Forms.PictureBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.saveCompressedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.generateMotionVectorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox6)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -58,7 +64,7 @@
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(572, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(986, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -67,7 +73,10 @@
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openUncompressedToolStripMenuItem,
             this.openCompressedToolStripMenuItem,
-            this.compressImageToolStripMenuItem});
+            this.compressImageToolStripMenuItem,
+            this.loadSecondFrameToolStripMenuItem,
+            this.saveCompressedToolStripMenuItem,
+            this.generateMotionVectorsToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
@@ -105,7 +114,7 @@
             // pictureBox2
             // 
             this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox2.Location = new System.Drawing.Point(309, 46);
+            this.pictureBox2.Location = new System.Drawing.Point(260, 46);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(251, 197);
             this.pictureBox2.TabIndex = 4;
@@ -130,7 +139,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(417, 30);
+            this.label2.Location = new System.Drawing.Point(345, 30);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(65, 13);
             this.label2.TabIndex = 6;
@@ -187,11 +196,53 @@
             this.label5.TabIndex = 12;
             this.label5.Text = "Cr";
             // 
+            // loadSecondFrameToolStripMenuItem
+            // 
+            this.loadSecondFrameToolStripMenuItem.Name = "loadSecondFrameToolStripMenuItem";
+            this.loadSecondFrameToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.loadSecondFrameToolStripMenuItem.Text = "Load Second Frame";
+            this.loadSecondFrameToolStripMenuItem.Click += new System.EventHandler(this.loadSecondFrameToolStripMenuItem_Click);
+            // 
+            // pictureBox6
+            // 
+            this.pictureBox6.Location = new System.Drawing.Point(517, 46);
+            this.pictureBox6.Name = "pictureBox6";
+            this.pictureBox6.Size = new System.Drawing.Size(242, 197);
+            this.pictureBox6.TabIndex = 13;
+            this.pictureBox6.TabStop = false;
+            // 
+            // label6
+            // 
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(607, 30);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(76, 13);
+            this.label6.TabIndex = 14;
+            this.label6.Text = "Second Frame";
+            this.label6.Click += new System.EventHandler(this.label6_Click);
+            // 
+            // saveCompressedToolStripMenuItem
+            // 
+            this.saveCompressedToolStripMenuItem.Name = "saveCompressedToolStripMenuItem";
+            this.saveCompressedToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.saveCompressedToolStripMenuItem.Text = "Save Compressed";
+            this.saveCompressedToolStripMenuItem.Click += new System.EventHandler(this.saveCompressedToolStripMenuItem_Click);
+            // 
+            // generateMotionVectorsToolStripMenuItem
+            // 
+            this.generateMotionVectorsToolStripMenuItem.Name = "generateMotionVectorsToolStripMenuItem";
+            this.generateMotionVectorsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.generateMotionVectorsToolStripMenuItem.Text = "Generate Motion Vectors";
+            this.generateMotionVectorsToolStripMenuItem.Click += new System.EventHandler(this.generateMotionVectorsToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(572, 556);
+            this.ClientSize = new System.Drawing.Size(986, 556);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.pictureBox6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
@@ -213,6 +264,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox6)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -236,6 +288,11 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ToolStripMenuItem loadSecondFrameToolStripMenuItem;
+        private System.Windows.Forms.PictureBox pictureBox6;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ToolStripMenuItem saveCompressedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem generateMotionVectorsToolStripMenuItem;
     }
 }
 

@@ -16,12 +16,8 @@ namespace compressionProject
     public partial class Form1 : Form
     {
         Bitmap uncompressedBitmap;
+        Bitmap uncompressedSecondFrame;
         Bitmap compressedBitmap;
-
-        double[,] Y;
-        double[,] Cb;
-        double[,] Cr;
-
 
         public Form1()
         {
@@ -106,15 +102,15 @@ namespace compressionProject
             int width = uncompressed.Width;
             int height = uncompressed.Height;
 
-            Y = new double[width,height];
-            Cb = new double[width/2,height/2];
-            Cr = new double[width / 2, height / 2];
+            double[,] Y = new double[width,height];
+            double[,] Cb = new double[width/2,height/2];
+            double[,] Cr = new double[width / 2, height / 2];
             
-            generateYcbcrBitmap(uncompressed);          
-            setYImage();//Sets the images to display on screen
+            generateYcbcrBitmap(uncompressed, ref Y, ref Cb, ref Cr);          
+            setYImage(Y, Cb, Cr);//Sets the images to display on screen
 
             Bitmap testBitmap = new Bitmap(width, height);
-            testBitmap = generateRgbBitmapFromYCbCr();
+            testBitmap = generateRgbBitmapFromYCbCr(Y, Cb, Cr);
             testBitmap.Save("SubsampledImage.bmp", ImageFormat.Bmp);
 
             DCT dct = new DCT();
@@ -132,7 +128,7 @@ namespace compressionProject
         /**
         Old code for saving to custom fileType.  not useable anymore.
             **/
-        public void oldSavingStuff() {
+        public void oldSavingStuff(double[,] Y) {
             int width = Y.GetLength(0);
             int height = Y.GetLength(1);
             YCbCr[,] ycbcrPixels = new YCbCr[width,height];
@@ -228,15 +224,16 @@ namespace compressionProject
 
 
         /*Converts a RGB bitmap to YCbCr*/
-        private void generateYcbcrBitmap(Bitmap uncompressed) {
+        private void generateYcbcrBitmap(Bitmap uncompressed, ref double[,] Y, ref double[,] Cb, ref double[,] Cr) {
             YCbCr[,] ycbcrPixels = new YCbCr[uncompressed.Width, uncompressed.Height];
             Color pixel;
             RGB rgb = new RGB();
 
-            for (int y = 0; y < uncompressed.Height; y++)
+            for (int y = 0; y < ycbcrPixels.GetLength(1); y++)
             {
-                for (int x = 0; x < uncompressed.Width; x++)
+                for (int x = 0; x < ycbcrPixels.GetLength(0); x++)
                 {
+                    if (x / 2 >= Cb.GetLength(0) || y / 2 >= Cb.GetLength(1)) continue;
                     pixel = uncompressed.GetPixel(x, y);
                     rgb.setRed(pixel.R);
                     rgb.setGreen(pixel.G);
@@ -249,48 +246,48 @@ namespace compressionProject
             }
         }
 
-        private void setYImage() {
-            int width = this.Y.GetLength(0);
-            int height = this.Y.GetLength(1);
+        private void setYImage(double[,] Y, double[,] Cb, double[,] Cr) {
+            int width = Y.GetLength(0);
+            int height = Y.GetLength(1);
 
-            Bitmap Y,Cb,Cr;
-            Y = new Bitmap(width, height);
-            Cb = new Bitmap(width/2, height/2);
-            Cr = new Bitmap(width/2, height/2);
+            Bitmap bitY,bitCb,bitCr;
+            bitY = new Bitmap(width, height);
+            bitCb = new Bitmap(width/2, height/2);
+            bitCr = new Bitmap(width/2, height/2);
 
             Color color = new Color();
 
             for (int y=0; y< height; y++) {
                 for (int x=0; x< width; x++) {
                     //color = Color.FromArgb((int)pixels[x, y].getY(), (int)pixels[x, y].getY(), (int)pixels[x, y].getY());
-                    color = Color.FromArgb((int)this.Y[x,y], (int)this.Y[x,y], (int)this.Y[x, y]);
-                    Y.SetPixel(x,y,color);                    
+                    color = Color.FromArgb((int)Y[x,y], (int)Y[x,y], (int)Y[x, y]);
+                    bitY.SetPixel(x,y,color);                    
                 }
             }
 
-            for (int y = 0; y < Cb.Height; y++)
+            for (int y = 0; y < bitCb.Height; y++)
             {
-                for (int x = 0; x < Cb.Width; x++)
+                for (int x = 0; x < bitCb.Width; x++)
                 {
                     //color = Color.FromArgb((int)pixels[x,y].getCb(), (int)pixels[x, y].getCb(), (int)pixels[x, y].getCb());
-                    color = Color.FromArgb((int)this.Cb[x, y], (int)this.Cb[x, y], (int)this.Cb[x, y]);
-                    Cb.SetPixel(x, y, color);
+                    color = Color.FromArgb((int)Cb[x, y], (int)Cb[x, y], (int)Cb[x, y]);
+                    bitCb.SetPixel(x, y, color);
                     //color = Color.FromArgb((int)pixels[x,y].getCr(), (int)pixels[x, y].getCr(), (int)pixels[x, y].getCr());
-                    color = Color.FromArgb((int)this.Cr[x, y], (int)this.Cr[x, y], (int)this.Cr[x, y]);
-                    Cr.SetPixel(x, y, color);
+                    color = Color.FromArgb((int)Cr[x, y], (int)Cr[x, y], (int)Cr[x, y]);
+                    bitCr.SetPixel(x, y, color);
                 }
             }
-                    pictureBox3.Image = Y;
+                    pictureBox3.Image = bitY;
             pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
-            Cb.Save("CbImage.bmp", ImageFormat.Bmp);
-            pictureBox4.Image = Cb;
+            bitCb.Save("CbImage.bmp", ImageFormat.Bmp);
+            pictureBox4.Image = bitCb;
             pictureBox4.SizeMode = PictureBoxSizeMode.Zoom;
-            pictureBox5.Image = Cr;
+            pictureBox5.Image = bitCr;
             pictureBox5.SizeMode = PictureBoxSizeMode.Zoom;
         }
 
         /*convert YCbCr values to a RGB bitmap*/
-        private Bitmap generateRgbBitmapFromYCbCr()
+        private Bitmap generateRgbBitmapFromYCbCr(double[,] Y, double[,] Cb, double[,] Cr)
         {
             int width = Y.GetLength(0);
             int height = Y.GetLength(1);
@@ -301,6 +298,7 @@ namespace compressionProject
             {
                 for (int x = 0; x < width; x++)
                 {
+                    if (x / 2 >= Cb.GetLength(0) || y / 2 >= Cb.GetLength(1)) continue;
                     rgb = convertYCbCrToRgb(Y[x,y], Cb[x/2,y/2], Cr[x/2,y/2]);
                     color = Color.FromArgb(rgb.getRed(),rgb.getGreen(),rgb.getBlue());
                     bitmap.SetPixel(x, y, color);
@@ -335,5 +333,69 @@ namespace compressionProject
 
         }
 
+        private void loadSecondFrameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+
+            // Set filter options and filter index.
+            openFileDialog1.InitialDirectory = @"N:\My Documents\My Pictures";
+            openFileDialog1.Filter = "JPEG Compressed Image (*.jpg|*.jpg" + "|GIF Image(*.gif|*.gif" + "|Bitmap Image(*.bmp|*.bmp";
+            openFileDialog1.Multiselect = true;
+            openFileDialog1.FilterIndex = 1;
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                uncompressedSecondFrame = new Bitmap(openFileDialog1.FileName);
+                //uncompressedSecondFrame.Save("OriginalSecondImage.bmp", ImageFormat.Bmp);
+            }
+
+            pictureBox6.Image = uncompressedSecondFrame;
+            pictureBox6.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+        private void label6_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void saveCompressedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        /*Generate motion vectors between the two frames*/
+        private void generateMotionVectorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            int width = uncompressedSecondFrame.Width;
+            int height = uncompressedSecondFrame.Height;
+
+            double[,] Y = new double[width, height];
+            double[,] Cb = new double[width / 2, height / 2];
+            double[,] Cr = new double[width / 2, height / 2];
+
+            //generate the Y, Cb, Cr values from the second frame
+            generateYcbcrBitmap(uncompressedSecondFrame, ref Y, ref Cb, ref Cr);
+
+            double[,] Y2 = new double[width, height];
+            double[,] Cb2 = new double[width / 2, height / 2];
+            double[,] Cr2 = new double[width / 2, height / 2];
+
+            generateYcbcrBitmap(uncompressedBitmap, ref Y2, ref Cb2, ref Cr2);
+
+            DCT dct = new DCT();
+            Block block = dct.generateBlock(Y, 0,0);
+
+            for (int q = 0; q < 8; q++)
+            {
+                for (int w = 0; w < 8; w++)
+                {
+                    Debug.Write(block.get(w, q) + ",");
+                }
+                Debug.WriteLine("");
+            }            
+
+            VideoCompression vidcom = new VideoCompression();
+            Point vector = vidcom.getVector(Y2, block, 0, 0, 15);
+            Debug.WriteLine("Motion vector = "+vector.X+","+vector.Y);
+        }
     }
 }
