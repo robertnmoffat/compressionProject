@@ -382,20 +382,20 @@ namespace compressionProject
             generateYcbcrBitmap(uncompressedBitmap, ref Y2, ref Cb2, ref Cr2);
 
             DCT dct = new DCT();
-            Block block = dct.generateBlock(Y, 0,0);
-
-            for (int q = 0; q < 8; q++)
-            {
-                for (int w = 0; w < 8; w++)
-                {
-                    Debug.Write(block.get(w, q) + ",");
-                }
-                Debug.WriteLine("");
-            }            
+            Block block = dct.generateBlock(Y, 0,0);            
 
             VideoCompression vidcom = new VideoCompression();
             Point vector = vidcom.getVector(Y2, block, 0, 0, 15);
             Debug.WriteLine("Motion vector = "+vector.X+","+vector.Y);
+            Block errorBlock = new Block();
+            errorBlock = vidcom.getCurrentErrorBlock();
+
+            for (int y=0; y<8; y++) {
+                for (int x = 0; x < 8; x++) {
+                    Debug.Write(errorBlock.get(x,y)+",");
+                }
+                Debug.WriteLine("");
+            }
         }
     }
 }

@@ -32,24 +32,45 @@ namespace compressionProject
             { 99, 99, 99, 99, 99, 99, 99, 99 },
             { 99, 99, 99, 99, 99, 99, 99, 99 },
             { 99, 99, 99, 99, 99, 99, 99, 99 }};
-
+        
 
         public void runDCT() {
             int horizontalBlocks = (int)Math.Ceiling((double)Y.GetLength(0) / 8);//amount of full 8x8 blocks will fit horizontally
             int verticalBlocks = (int)Math.Ceiling((double)Y.GetLength(1) / 8);//amount of full 8x8 blocks will fit vertically
 
             Block[,] Yblocks = new Block[horizontalBlocks, verticalBlocks];
-            Block[,] dctBlocks = new Block[horizontalBlocks, verticalBlocks];
-            Block[,] postBlocks = new Block[horizontalBlocks, verticalBlocks];
+            Block[,] YdctBlocks = new Block[horizontalBlocks, verticalBlocks];
+            Block[,] YpostBlocks = new Block[horizontalBlocks, verticalBlocks];
+
+            Block[,] Cbblocks = new Block[(int)Math.Round((double)horizontalBlocks/2), (int)Math.Round((double)verticalBlocks /2)];
+            Block[,] CbdctBlocks = new Block[(int)Math.Round((double)horizontalBlocks /2), (int)Math.Round((double)verticalBlocks /2)];
+            Block[,] CbpostBlocks = new Block[(int)Math.Round((double)horizontalBlocks /2), (int)Math.Round((double)verticalBlocks /2)];
+
+
+            Block[,] Crblocks = new Block[(int)Math.Round((double)horizontalBlocks /2), (int)Math.Round((double)verticalBlocks /2)];
+            Block[,] CrdctBlocks = new Block[(int)Math.Round((double)horizontalBlocks / 2), (int)Math.Round((double)verticalBlocks / 2)];
+            Block[,] CrpostBlocks = new Block[(int)Math.Round((double)horizontalBlocks / 2), (int)Math.Round((double)verticalBlocks / 2)];
+
+            int[] toSaveBuffer = new int[horizontalBlocks*8*verticalBlocks*8];
+            int toSaveBufferPos = 0;
 
             for (int y=0; y<verticalBlocks; y++) {
                 for (int x=0; x<horizontalBlocks; x++) {
                     Yblocks[x, y] = generateBlock(Y, x*8, y*8);//which block, multiplied by block offset (8) 
-                    dctBlocks[x, y] = new Block();
-                    postBlocks[x, y] = new Block();
+                    YdctBlocks[x, y] = new Block();
+                    YpostBlocks[x, y] = new Block();
+                    
+                        Cbblocks[x/2, y/2] = generateBlock(Cb, x * 8, y * 8);//which block, multiplied by block offset (8) 
+                        CbdctBlocks[x/2, y/2] = new Block();
+                        CbpostBlocks[x/2, y/2] = new Block();
+
+                        Crblocks[x / 2, y / 2] = generateBlock(Cr, x * 8, y * 8);//which block, multiplied by block offset (8) 
+                        CrdctBlocks[x / 2, y / 2] = new Block();
+                        CrpostBlocks[x / 2, y / 2] = new Block();
+                    
                 }
             }
-
+            
             for (int y = 0; y < verticalBlocks; y++)
             {
                 for (int x = 0; x < horizontalBlocks; x++)
@@ -60,68 +81,146 @@ namespace compressionProject
                         for (int u = 0; u < 8; u++)
                         {
 
-                            dctBlocks[x, y].set(u, v, applyDCTFormula(Yblocks[x, y], u, v));
+                            YdctBlocks[x, y].set(u, v, applyDCTFormula(Yblocks[x, y], u, v));
 
-                            //--------------------------------------------------------------------APPLY QUANTIZATION HERE
-                            
-
-                            //Yblocks[x, y].set(u,v, Math.Abs(applyIDCTFormula(Yblocks[x,y], u, v)));
-                            //if (u == 0 && v == 0) Yblocks[x, y].set(u,v,0.0);
-
-                            //Debug.Write(""+Yblocks[x,y].get(u,v)+" ");
+                            if (x % 2 == 0 && y % 2 == 0)
+                            {
+                                CbdctBlocks[x / 2, y / 2].set(u, v, applyDCTFormula(Cbblocks[x / 2, y / 2], u, v));
+                                CrdctBlocks[x / 2, y / 2].set(u, v, applyDCTFormula(Crblocks[x / 2, y / 2], u, v));
+                            }
                         }
                         //Debug.WriteLine("");
                     }
 
-                    dctBlocks[x,y] = applyQuantization(dctBlocks[x,y], luminance);
+                    YdctBlocks[x, y] = applyQuantization(YdctBlocks[x, y], luminance);
 
-                    if (x==0&&y==0) {
-                        for (int q=0; q<8; q++) {
-                            for (int w=0; w<8; w++) {
-                                Debug.Write(dctBlocks[x, y].get(q, w)+",");
-                            }
-                            Debug.WriteLine("");
-                        }
+                    if (x % 2 == 0 && y % 2 == 0)
+                    {
+                        CbdctBlocks[x / 2, y / 2] = applyQuantization(CbdctBlocks[x / 2, y / 2], chrominance);
+                        CrdctBlocks[x / 2, y / 2] = applyQuantization(CrdctBlocks[x / 2, y / 2], chrominance);
+                    }
 
-                        Debug.WriteLine("-------------------------------------");
-                        int[] zig = applyZigZag(dctBlocks[x, y]);
-
-                        for (int i = 0; i < zig.GetLength(0); i++)
-                        {
-                            Debug.Write((zig[i])+",");
-                        }
-
-                        Debug.WriteLine("");
-                        Debug.WriteLine("-------------------------------------");
-                        int[] encoded = runLengthEncode(zig);
-
-                        for (int i = 0; i < encoded.GetLength(0); i++)
-                        {
-                            Debug.Write((encoded[i]) + ",");
-                        }
-
-                        Debug.WriteLine("");
-                        Debug.WriteLine("-------------------------------------");
-
-                        zig = undoRunlengthEncoding(encoded);
-                        for (int i = 0; i < zig.GetLength(0); i++)
-                        {
-                            Debug.Write((zig[i]) + ",");
-                        }
-
-                        dctBlocks[x, y] = undoZigZag(zig);
-                        Debug.WriteLine("");
-                        Debug.WriteLine("-------------------------------------");
-
+                    if (x == 0 && y == 0)
+                    {
                         for (int q = 0; q < 8; q++)
                         {
                             for (int w = 0; w < 8; w++)
                             {
-                                Debug.Write(dctBlocks[x, y].get(q, w) + ",");
+                                Debug.Write(YdctBlocks[x, y].get(q, w) + ",");
+                                //Debug.Write(CbdctBlocks[x, y].get(q, w) + ",");
+                            }
+                            Debug.WriteLine("");
+                        }
+
+                        Debug.WriteLine("-------------------------------------");
+                    }
+                    int[] Yzig = applyZigZag(YdctBlocks[x, y]);
+
+
+                    int[] Yencoded = runLengthEncode(Yzig);
+                    toSaveBuffer[toSaveBufferPos++] = Yencoded.Length;
+                    for (int i = 0; i < Yencoded.Length; i++)
+                    {
+                        toSaveBuffer[toSaveBufferPos++] = Yencoded[i];
+                    }
+
+
+                    int[] Cbzig = new int[128];
+                    int[] Crzig = new int[128];
+
+                    int[] Cbencoded = new int[128];
+                    int[] Crencoded = new int[128];
+
+                    if (x % 2 == 0 && y % 2 == 0)
+                    {
+                        Cbzig = applyZigZag(CbdctBlocks[x / 2, y / 2]);
+                        Crzig = applyZigZag(CrdctBlocks[x / 2, y / 2]);
+
+                        Cbencoded = runLengthEncode(Cbzig);
+                        Crencoded = runLengthEncode(Crzig);
+
+                        //first save the length of the run length, so we know how far to read later
+                        toSaveBuffer[toSaveBufferPos++] = Cbencoded.Length;
+                        for (int i = 0; i < Cbencoded.Length; i++)
+                        {
+                            toSaveBuffer[toSaveBufferPos++] = Cbencoded[i];
+                        }
+                        toSaveBuffer[toSaveBufferPos++] = Crencoded.Length;
+                        for (int i = 0; i < Crencoded.Length; i++)
+                        {
+                            toSaveBuffer[toSaveBufferPos++] = Crencoded[i];
+                        }
+
+                    }
+                    
+
+                    if (x == 0 && y == 0)
+                    {
+                        //for (int i = 0; i < Yzig.GetLength(0); i++)
+                        for (int i = 0; i < Cbzig.GetLength(0); i++)
+                        {
+                            Debug.Write((Yzig[i]) + ",");
+                            //Debug.Write((Cbzig[i]) + ",");
+                        }
+
+                        Debug.WriteLine("");
+                        Debug.WriteLine("-------------------------------------");
+                    }
+                                        
+                    if (x == 0 && y == 0)
+                    {
+                        for (int i = 0; i < Yencoded.GetLength(0); i++)
+                        //for (int i = 0; i < Cbencoded.GetLength(0); i++)
+                        {
+                            Debug.Write((Yencoded[i]) + ",");
+                            //Debug.Write((Cbencoded[i]) + ",");
+                        }
+
+                        Debug.WriteLine("");
+                        Debug.WriteLine("-------------------------------------");
+                    }
+
+                    //saveFile();
+                    //--------------------------------------UNDO COMPRESSION---------------------------------------------------------------------
+
+                    Yzig = undoRunlengthEncoding(Yencoded);
+                    if(x%2==0&&y%2==0) {
+                        Cbzig = undoRunlengthEncoding(Cbencoded);
+                        Crzig = undoRunlengthEncoding(Crencoded);
+                    }
+
+                    if (x == 0 && y == 0)
+                    {
+                        for (int i = 0; i < Yzig.GetLength(0); i++)
+                        {
+                            Debug.Write((Yzig[i]) + ",");
+                            //Debug.Write((Cbzig[i]) + ",");
+                        }
+
+                        Debug.WriteLine("");
+                        Debug.WriteLine("-------------------------------------");
+                    }
+                    
+
+
+                    YdctBlocks[x, y] = undoZigZag(Yzig);
+                    if (x%2==0&& y%2==0) {
+                        CbdctBlocks[x/2, y/2] = undoZigZag(Cbzig);
+                    }
+
+                    if (x == 0 && y == 0)
+                    {
+                        for (int q = 0; q < 8; q++)
+                        {
+                            for (int w = 0; w < 8; w++)
+                            {
+                                Debug.Write(YdctBlocks[x, y].get(q, w) + ",");
+                                //Debug.Write(CbdctBlocks[x, y].get(q, w) + ",");
                             }
                             Debug.WriteLine("");
                         }
                     }
+                    
 
                    // int[] zig = applyZigZag(dctBlocks[x,y]);
                     //int[] encoded = runLengthEncode(zig);
@@ -132,26 +231,46 @@ namespace compressionProject
                 }
             }
 
+            Debug.WriteLine("File length = "+toSaveBufferPos);
+
             for (int y = 0; y < verticalBlocks; y++)
             {
                 for (int x = 0; x < horizontalBlocks; x++)
                 {
-                    dctBlocks[x, y] = RemoveQuantization(dctBlocks[x,y], luminance);
+                    YdctBlocks[x, y] = RemoveQuantization(YdctBlocks[x,y], luminance);
 
                     for (int v = 0; v < 8; v++)
                     {
                         for (int u = 0; u < 8; u++)
                         {
-                            postBlocks[x, y].set(u, v, applyIDCTFormula(dctBlocks[x, y], u, v));
-                            if (postBlocks[x, y].get(u, v) > 255) postBlocks[x, y].set(u, v, 255);
-                            if (postBlocks[x, y].get(u, v) < 0) postBlocks[x, y].set(u, v, 0);
+                            YpostBlocks[x, y].set(u, v, applyIDCTFormula(YdctBlocks[x, y], u, v));
+                            if (YpostBlocks[x, y].get(u, v) > 255) YpostBlocks[x, y].set(u, v, 255);
+                            if (YpostBlocks[x, y].get(u, v) < 0) YpostBlocks[x, y].set(u, v, 0);
+
+                            if (x%2==0&&y%2==0) {
+                                CbpostBlocks[x / 2, y / 2].set(u,v,applyIDCTFormula(CbdctBlocks[x/2,y/2],u,v));
+                                CrpostBlocks[x / 2, y / 2].set(u, v, applyIDCTFormula(CrdctBlocks[x / 2, y / 2], u, v));
+                            }
                         }
                     }
                 }
             }
 
-            Bitmap postDCTImage = createBitmapFromBlocks(postBlocks, Y.GetLength(0), Y.GetLength(1));
+            Bitmap postDCTImage = createBitmapFromBlocks(YpostBlocks, Y.GetLength(0), Y.GetLength(1));
             postDCTImage.Save("PostDCT.bmp", ImageFormat.Bmp);
+
+            Debug.WriteLine("-------------------------------POST----------------------------------------");
+            for (int j = 0; j < 8; j++)
+            {
+                for (int i = 0; i < 8; i++) {
+                    Debug.Write(Cb[i,j]+"|");
+                    Debug.Write(CbpostBlocks[0, 0].get(i,j)+",");
+                }
+                Debug.WriteLine("");
+            }
+
+            Bitmap CrpostDCTImage = createBitmapFromBlocks(CrpostBlocks, Cr.GetLength(0), Cr.GetLength(1));
+            CrpostDCTImage.Save("CrPostDCT.bmp", ImageFormat.Bmp);
         }
 
         /*
