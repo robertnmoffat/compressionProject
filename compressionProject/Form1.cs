@@ -70,9 +70,12 @@ namespace compressionProject
             openFileDialog1.FilterIndex = 1;
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                //fileBytes = File.ReadAllBytes(openFileDialog1.FileName);
-                compressedBitmap = convertFileToBitmap(openFileDialog1.FileName);
-                pictureBox2.Image = compressedBitmap;
+                DCT dct = new DCT();
+                dct.openSavedFile(openFileDialog1.FileName);
+
+                Bitmap finalImage = generateRgbBitmapFromYCbCr(dct.YImage, dct.CbImage, dct.CrImage);
+                finalImage.Save("FinalJPEG.bmp", ImageFormat.Bmp);
+                pictureBox2.Image = finalImage;
                 pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
                 //uncompressedBitmap = new Bitmap(openFileDialog1.FileName);
             }
@@ -118,7 +121,7 @@ namespace compressionProject
             dct.setCb(Cb);
             dct.setCr(Cr);
 
-            dct.runDCT();
+            dct.runDCT();            
 
             System.Windows.Forms.MessageBox.Show("Compression complete!");
         }
@@ -380,22 +383,58 @@ namespace compressionProject
             double[,] Cr2 = new double[width / 2, height / 2];
 
             generateYcbcrBitmap(uncompressedBitmap, ref Y2, ref Cb2, ref Cr2);
-
+            
             DCT dct = new DCT();
-            Block block = dct.generateBlock(Y, 0,0);            
-
+            Point[,] vectors = new Point[(int)Math.Ceiling((double)width/8), (int)Math.Ceiling((double)height / 8)];
+            Block[,] YerrorBlocks = new Block[(int)Math.Ceiling((double)width / 8), (int)Math.Ceiling((double)height / 8)];
+            Block[,] CberrorBlocks = new Block[(int)Math.Ceiling((double)width / 8), (int)Math.Ceiling((double)height / 8)];
+            Block[,] CrerrorBlocks = new Block[(int)Math.Ceiling((double)width / 8), (int)Math.Ceiling((double)height / 8)];
             VideoCompression vidcom = new VideoCompression();
-            Point vector = vidcom.getVector(Y2, block, 0, 0, 15);
-            Debug.WriteLine("Motion vector = "+vector.X+","+vector.Y);
-            Block errorBlock = new Block();
-            errorBlock = vidcom.getCurrentErrorBlock();
 
-            for (int y=0; y<8; y++) {
-                for (int x = 0; x < 8; x++) {
-                    Debug.Write(errorBlock.get(x,y)+",");
+            for (int y=0; y<height; y+=8) {
+                for (int x = 0; x < width; x += 8) {
+                    Block Yblock = dct.generateBlock(Y, x, y);
+                    Block Cbblock = dct.generateBlock(Cb, x, y);
+                    Block Crblock = dct.generateBlock(Cr, x, y);
+
+                    vectors[x/8,y/8] = vidcom.getVector(Y2, Yblock, x, y, 15);
+                    vidcom.getErrorForPosition(Cb2, Cbblock, vectors[x / 8, y / 8].X, vectors[x / 8, y / 8].Y, 2);
+                    vidcom.getErrorForPosition(Cr2, Crblock, vectors[x / 8, y / 8].X, vectors[x / 8, y / 8].Y, 3);
+                    YerrorBlocks[x/8,y/8] = vidcom.getCurrentYErrorBlock();
+                    CberrorBlocks[x / 8, y / 8] = vidcom.getCurrentCbErrorBlock();
+                    CrerrorBlocks[x / 8, y / 8] = vidcom.getCurrentCrErrorBlock();
+
+                    Debug.Write("(" + vectors[x/8,y/8].X + "," + vectors[x/8,y/8].Y+"),");
                 }
                 Debug.WriteLine("");
             }
+            
+
+            dct.compressPframe(YerrorBlocks, CberrorBlocks, CrerrorBlocks, vectors, width, height);
+
+
+            Block[,] finalY = new Block[dct.Yblocks.GetLength(0), dct.Yblocks.GetLength(1)];
+            Block[,] finalCb = new Block[dct.Yblocks.GetLength(0), dct.Yblocks.GetLength(1)];
+            Block[,] finalCr = new Block[dct.Yblocks.GetLength(0), dct.Yblocks.GetLength(1)];
+
+            for (int y=0; y<dct.Yblocks.GetLength(0); y++) {
+                for (int x=0; x<dct.Yblocks.GetLength(1); x++) {
+                    vidcom.getOriginalFromError(Y2, dct.Yblocks[x,y], x*8+vectors[x,y].X, y * 8 + vectors[x,y].Y, 1);
+                    finalY[x, y] = vidcom.YpostBlock;
+                    vidcom.getOriginalFromError(Cb2, dct.Cbblocks[x, y], x * 8 + vectors[x, y].X, y * 8 + vectors[x, y].Y, 2);
+                    finalCb[x, y] = vidcom.CbpostBlock;
+                    vidcom.getOriginalFromError(Cr2, dct.Crblocks[x, y], x * 8 + vectors[x, y].X, y * 8 + vectors[x, y].Y, 3);
+                    finalCr[x, y] = vidcom.CrpostBlock;
+                }
+            }
+
+            double[,] finalYimage = dct.makeDoubleArrayFromBlocks(finalY, width, height);
+            double[,] finalCbimage = dct.makeDoubleArrayFromBlocks(finalCb, width, height);
+            double[,] finalCrimage = dct.makeDoubleArrayFromBlocks(finalCr, width, height);
+
+            Bitmap pframe = generateRgbBitmapFromYCbCr(finalYimage, finalCbimage, finalCrimage);
+            pictureBox2.Image = pframe;
+            pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
         }
     }
 }
